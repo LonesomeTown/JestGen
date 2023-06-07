@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { readConfig } from './extension';
+import * as os from 'os';
+import { JestGenConfig, readConfig } from './extension';
+import * as utils from './utils';
 
 /**
  * Command function to create a Jest test file for a selected method in a .ts file.
@@ -30,29 +32,25 @@ export const createTestFile = async () => {
   
     // Get source file path
     const sourceFilePath = document.fileName;
-
-    // Transform source file path to test file path
-    const parsedSourceFilePath = path.parse(sourceFilePath);
-    const pathSegments = parsedSourceFilePath.dir.split(path.sep);
-    const srcIndex = pathSegments.findIndex(segment => segment === 'src');
-    if (srcIndex >= 0 && srcIndex < pathSegments.length - 1) {
-        pathSegments.splice(srcIndex + 1, 0, 'test');
-    }
-    const testDirectoryPath = pathSegments.join(path.sep);
-    const testFilePath = path.join(
-        testDirectoryPath,
-        `${parsedSourceFilePath.name}.test${parsedSourceFilePath.ext}`
-    );
+    const rootPath = utils.getRootPath();
+    // Remove the rootPath from the source file path
+    const relativeSourceFilePath = sourceFilePath.replace(rootPath, '');
+    // Create the test file path
+    const testFilePath = path.join(rootPath, 'test', relativeSourceFilePath);
+    // Change the test file extension to `.test.ts`
+    const testFileBaseName = path.basename(testFilePath, path.extname(testFilePath));
+    const testFileDirName = path.dirname(testFilePath);
+    const finalTestFilePath = path.join(testFileDirName, `${testFileBaseName}.test.ts`);
 
     // Get config
     const config = await readConfig();
 
     // Create test file content
-    let jestTestBlock = '';
+    let templateContent = '';
 
-    if (config.useTemplate) {
+    if (config.useCustomizeTemplate) {
       try {
-        jestTestBlock = await fs.promises.readFile(config.templatePath, 'utf8');
+        templateContent = await fs.promises.readFile(config.customizeTemplatePath, 'utf8');
       } catch {
         vscode.window.showErrorMessage('Failed to read Jest template file');
       }
@@ -61,17 +59,37 @@ export const createTestFile = async () => {
             // `__dirname` is a global variable provided by Node.js 
             // which presents the folder of current excuted file.
             const defaultTemplatePath = path.join(__dirname, 'defaultTemplate.txt');
-            jestTestBlock = await fs.promises.readFile(defaultTemplatePath, 'utf8');
+            templateContent = await fs.promises.readFile(defaultTemplatePath, 'utf8');
         } catch {
             vscode.window.showErrorMessage('Failed to read default Jest template file');
         }
     }
 
+    templateContent = await replaceTemplatePlaceholders(templateContent, config);
+
     // Make sure the test directory exists
-    await fs.promises.mkdir(testDirectoryPath, { recursive: true });
+    await fs.promises.mkdir(testFileDirName, { recursive: true });
 
     // Write test file
-    await fs.promises.writeFile(testFilePath, jestTestBlock);
+    await fs.promises.writeFile(finalTestFilePath, templateContent);
 
-    console.log(`Test file created at ${testFilePath}`);
+    console.log(`Test file created at ${finalTestFilePath}`);
 };
+
+const replaceTemplatePlaceholders = async (templateContent: string, config: JestGenConfig): Promise<string> => {
+    let { useSupertest, appPath } = config;
+
+    if (useSupertest) {
+        templateContent = templateContent.replace('{useSupertest_app_import}', `import { app } from '${appPath}';`);
+        templateContent = templateContent.replace('{useSupertest_supertest_import}', `import supertest from 'supertest';`);
+        templateContent = templateContent.replace('{useSupertest_gen_server}', `const server = app.listen();`);
+        templateContent = templateContent.replace('{useSupertest_gen_request}', `const request = supertest( server );`);
+        templateContent = templateContent.replace('{useSupertest_close_server}', `server.close();`);
+    } else {
+        // Use regular expressions to remove all placeholders starting with useSupertest_
+        const useSupertestLine = new RegExp(`.*{useSupertest_.*}${os.EOL}(${os.EOL})?`, 'g');
+        templateContent = templateContent.replace(useSupertestLine, '');
+    }
+
+    return templateContent;
+}

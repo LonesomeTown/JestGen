@@ -40,7 +40,13 @@
           "when": "editorHasSelection && editorLangId == 'typescript'"
         }
       ]
-    }
+    },
+    "jsonValidation": [
+        {
+            "fileMatch": ".jestgen.json",
+            "url": "https://lonesometown.github.io/JestGen/json-schema.json"
+        }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "yarn run package",

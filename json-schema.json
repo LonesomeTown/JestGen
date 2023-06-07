@@ -3,12 +3,12 @@
   "title": "JestGen configuration",
   "type": "object",
   "properties": {
-    "useTemplate": {
-      "description": "Whether to use a template for the test files.",
+    "useCustomizeTemplate": {
+      "description": "Whether to use a customize template for the test files.",
       "type": "boolean"
     },
-    "templatePath": {
-      "description": "The path to the template file, if useTemplate is true.",
+    "customizeTemplatePath": {
+      "description": "The path to the customize template file, if useCustomizeTemplate is true.",
       "type": "string"
     },
     "useSupertest": {
@@ -16,7 +16,7 @@
       "type": "boolean"
     },
     "appPath": {
-      "description": "The path to the app file, if useSupertest is true. This is required if useSupertest is true.",
+      "description": "The relative path to the app file, if useSupertest is true. This is required if useSupertest is true.",
       "type": "string"
     }
   },

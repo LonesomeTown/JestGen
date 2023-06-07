@@ -1,11 +1,11 @@
-import { app } from '../../../server';
-import supertest from 'supertest';
+{useSupertest_app_import}
+{useSupertest_supertest_import}
 
-const server = app.listen();
-const request = supertest( server );
+{useSupertest_gen_server}
+{useSupertest_gen_request}
 
 afterAll( async ()=> {
-    server.close();
+    {useSupertest_close_server}
 });
 
 describe('${methodName}', () => {

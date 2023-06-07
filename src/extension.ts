@@ -1,37 +1,29 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { createTestFile } from './createTestFile';
 import * as fs from 'fs';
 import * as path from 'path';
+import { createTestFile } from './createTestFile';
+import * as utils from './utils';
 
-interface JestGenConfig {
-    useTemplate: boolean;
-    templatePath: string;
+export interface JestGenConfig {
+    useCustomizeTemplate: boolean;
+    customizeTemplatePath: string;
     useSupertest: boolean;
     appPath: string | null;
 }
 
 const defaultJestConfig: JestGenConfig = {
-    useTemplate: false,
-    templatePath: __dirname + '/defaultTemplate.txt',
+    useCustomizeTemplate: false,
+    customizeTemplatePath: __dirname + '/defaultTemplate.txt',
     useSupertest: false,
     appPath: null,
 };
 
 export const readConfig = async (): Promise<JestGenConfig> => {
-    let rootPath: string;
+    const rootPath = utils.getRootPath();
 
-    // If a workspace is opened
-    const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (workspaceFolders) {
-        rootPath = workspaceFolders[0].uri.fsPath;
-    } 
-    // If a single file is opened
-    else if (vscode.window.activeTextEditor) {
-        rootPath = path.dirname(vscode.window.activeTextEditor.document.fileName);
-    } 
-    else {
+    if (!rootPath) {
         // If neither workspace nor single file is opened, return default config
         return defaultJestConfig;
     }
@@ -43,8 +35,8 @@ export const readConfig = async (): Promise<JestGenConfig> => {
         const config: JestGenConfig = JSON.parse(configFileContent);
         
         // Update `templatePath` to an absolute path
-        if (config.useTemplate) {
-            config.templatePath = path.resolve(path.dirname(configFilePath), config.templatePath);
+        if (config.useCustomizeTemplate) {
+            config.customizeTemplatePath = path.resolve(path.dirname(configFilePath), config.customizeTemplatePath);
         }
         
         return config;
