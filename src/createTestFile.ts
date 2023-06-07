@@ -5,6 +5,11 @@ import * as os from 'os';
 import { JestGenConfig, readConfig } from './extension';
 import * as utils from './utils';
 
+interface SourceFileProperties {
+    fileName: string;
+    functionName: string;
+}
+
 /**
  * Command function to create a Jest test file for a selected method in a .ts file.
  */
@@ -27,11 +32,10 @@ export const createTestFile = async () => {
         vscode.window.showInformationMessage('Please place the cursor on a method name to create a Jest test file.');
         return;
     }
-
-    const methodName = document.getText(range);
   
     // Get source file path
     const sourceFilePath = document.fileName;
+    const sourceFileBasename = path.basename(sourceFilePath, path.extname(sourceFilePath));
     const rootPath = utils.getRootPath();
     // Remove the rootPath from the source file path
     const relativeSourceFilePath = sourceFilePath.replace(rootPath, '');
@@ -65,7 +69,13 @@ export const createTestFile = async () => {
         }
     }
 
-    templateContent = await replaceTemplatePlaceholders(templateContent, config);
+    // Create source file properties
+    const sourceFilePropertise: SourceFileProperties = {
+        fileName: sourceFileBasename,
+        functionName: document.getText(range)
+    }
+
+    templateContent = await replaceTemplatePlaceholders(templateContent, config, sourceFilePropertise);
 
     // Make sure the test directory exists
     await fs.promises.mkdir(testFileDirName, { recursive: true });
@@ -76,18 +86,26 @@ export const createTestFile = async () => {
     console.log(`Test file created at ${finalTestFilePath}`);
 };
 
-const replaceTemplatePlaceholders = async (templateContent: string, config: JestGenConfig): Promise<string> => {
+const replaceTemplatePlaceholders = async (
+    templateContent: string
+    , config: JestGenConfig
+    , sourceFilePropertise: SourceFileProperties
+): Promise<string> => {
     let { useSupertest, appPath } = config;
+    const { fileName, functionName } = sourceFilePropertise;
+
+    templateContent = templateContent.replace('${sourceFilePropertise_fileName}', fileName);
+    templateContent = templateContent.replace('${sourceFilePropertise_functionName}', functionName);
 
     if (useSupertest) {
-        templateContent = templateContent.replace('{useSupertest_app_import}', `import { app } from '${appPath}';`);
-        templateContent = templateContent.replace('{useSupertest_supertest_import}', `import supertest from 'supertest';`);
-        templateContent = templateContent.replace('{useSupertest_gen_server}', `const server = app.listen();`);
-        templateContent = templateContent.replace('{useSupertest_gen_request}', `const request = supertest( server );`);
-        templateContent = templateContent.replace('{useSupertest_close_server}', `server.close();`);
+        templateContent = templateContent.replace('${useSupertest_app_import}', `import { app } from '${appPath}';`);
+        templateContent = templateContent.replace('${useSupertest_supertest_import}', `import supertest from 'supertest';`);
+        templateContent = templateContent.replace('${useSupertest_gen_server}', `const server = app.listen();`);
+        templateContent = templateContent.replace('${useSupertest_gen_request}', `const request = supertest( server );`);
+        templateContent = templateContent.replace('${useSupertest_close_server}', `server.close();`);
     } else {
-        // Use regular expressions to remove all placeholders starting with useSupertest_
-        const useSupertestLine = new RegExp(`.*{useSupertest_.*}${os.EOL}(${os.EOL})?`, 'g');
+        // Use regular expressions to remove all placeholders starting with useSupertest_ and empty lines
+        const useSupertestLine = new RegExp(`.*\\\${useSupertest_.*}${os.EOL}(${os.EOL})?`, 'g');
         templateContent = templateContent.replace(useSupertestLine, '');
     }
 

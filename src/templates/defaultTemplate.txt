@@ -1,15 +1,15 @@
-{useSupertest_app_import}
-{useSupertest_supertest_import}
+${useSupertest_app_import}
+${useSupertest_supertest_import}
 
-{useSupertest_gen_server}
-{useSupertest_gen_request}
+${useSupertest_gen_server}
+${useSupertest_gen_request}
 
 afterAll( async ()=> {
-    {useSupertest_close_server}
+    ${useSupertest_close_server}
 });
 
-describe('${methodName}', () => {
-    it('should do something', () => {
+describe('${sourceFilePropertise_fileName}', () => {
+    it('${sourceFilePropertise_functionName}', () => {
         // TODO: Add tests
     });
 });
