@@ -1,0 +1,16 @@
+import { app } from '../../../server';
+import supertest from 'supertest';
+
+const server = app.listen();
+const request = supertest( server );
+
+afterAll( async ()=> {
+    server.close();
+});
+
+describe('${methodName}', () => {
+    it('should do something', () => {
+        // TODO: Add tests
+    });
+});
+    
