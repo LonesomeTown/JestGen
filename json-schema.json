@@ -3,11 +3,11 @@
   "title": "JestGen configuration",
   "type": "object",
   "properties": {
-    "useCustomizeTemplate": {
+    "useCustomTemplate": {
       "description": "Whether to use a customize template for the test files.",
       "type": "boolean"
     },
-    "customizeTemplatePath": {
+    "customTemplatePath": {
       "description": "The path to the customize template file, if useCustomizeTemplate is true.",
       "type": "string"
     },

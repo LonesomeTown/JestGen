@@ -9,8 +9,3 @@ afterAll( async ()=> {
 });
 
 describe('${sourceFilePropertise_fileName}', () => {
-    it('${sourceFilePropertise_functionName}', () => {
-        // TODO: Add tests
-    });
-});
-    

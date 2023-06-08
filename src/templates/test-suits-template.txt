@@ -1,0 +1,8 @@
+    
+    describe('when ${sourceFilePropertise_functionName}', () => {
+        it('should ${sourceFilePropertise_functionName}', () => {
+            // TODO: Add tests
+        });
+    });
+    
+});

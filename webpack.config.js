@@ -48,7 +48,8 @@ const extensionConfig = {
   plugins: [
     new CopyPlugin({
       patterns: [
-        { from: __dirname + '/src/templates/defaultTemplate.txt', to: 'defaultTemplate.txt' },
+            { from: __dirname + '/src/templates/default-template.txt', to: 'default-template.txt' },
+            { from: __dirname + '/src/templates/test-suits-template.txt', to: 'test-suits-template.txt' }
       ],
     }),
   ],

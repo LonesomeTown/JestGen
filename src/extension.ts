@@ -7,15 +7,15 @@ import { createTestFile } from './createTestFile';
 import * as utils from './utils';
 
 export interface JestGenConfig {
-    useCustomizeTemplate: boolean;
-    customizeTemplatePath: string;
+    useCustomTemplate: boolean;
+    customTemplatePath: string;
     useSupertest: boolean;
     appPath: string | null;
 }
 
 const defaultJestConfig: JestGenConfig = {
-    useCustomizeTemplate: false,
-    customizeTemplatePath: __dirname + '/defaultTemplate.txt',
+    useCustomTemplate: false,
+    customTemplatePath: __dirname + '/default-template.txt',
     useSupertest: false,
     appPath: null,
 };
@@ -35,8 +35,8 @@ export const readConfig = async (): Promise<JestGenConfig> => {
         const config: JestGenConfig = JSON.parse(configFileContent);
         
         // Update `templatePath` to an absolute path
-        if (config.useCustomizeTemplate) {
-            config.customizeTemplatePath = path.resolve(path.dirname(configFilePath), config.customizeTemplatePath);
+        if (config.useCustomTemplate) {
+            config.customTemplatePath = path.resolve(path.dirname(configFilePath), config.customTemplatePath);
         }
         
         return config;
