@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { JestGenConfig, readConfig } from './extension';
 import * as utils from './utils';
 
 interface SourceFileProperties {
@@ -10,8 +9,23 @@ interface SourceFileProperties {
     functionName: string;
 }
 
+interface JestGenConfig {
+    useCustomTemplate: boolean;
+    customTemplatePath: string;
+    useSupertest: boolean;
+    appPath: string | null;
+}
+
+const defaultJestConfig: JestGenConfig = {
+    useCustomTemplate: false,
+    customTemplatePath: __dirname + '/default-template.txt',
+    useSupertest: false,
+    appPath: null,
+};
+
 /**
- * Command function to create a Jest test file for a selected method in a .ts file.
+ * Command function to create a Jest test file 
+ * for a selected method in a .ts file.
  */
 export const createTestFile = async () => {
 
@@ -83,6 +97,32 @@ export const createTestFile = async () => {
     console.log(`Test file created at ${finalTestFilePath}`);
 };
 
+const readConfig = async (): Promise<JestGenConfig> => {
+    const rootPath = utils.getRootPath();
+
+    if (!rootPath) {
+        // If neither workspace nor single file is opened, return default config
+        return defaultJestConfig;
+    }
+
+    const configFilePath = path.join(rootPath, '.jestgen.json');
+
+    try {
+        const configFileContent = await fs.promises.readFile(configFilePath, 'utf8');
+        const config: JestGenConfig = JSON.parse(configFileContent);
+        
+        // Update `templatePath` to an absolute path
+        if (config.useCustomTemplate) {
+            config.customTemplatePath = path.resolve(path.dirname(configFilePath), config.customTemplatePath);
+        }
+        
+        return config;
+    } catch {
+        // If the config file can't be read, use the default config
+        return defaultJestConfig;
+    }
+};
+
 const buildDefaultTemplate = async (
     templateContent: string
     , config: JestGenConfig
@@ -121,7 +161,9 @@ const replaceDefaultTemplatePlaceholders = async (
         templateContent = templateContent.replace('${useSupertest_gen_request}', `const request = supertest( server );`);
         templateContent = templateContent.replace('${useSupertest_close_server}', `server.close();`);
     } else {
-        // Use regular expressions to remove all placeholders starting with useSupertest_ and empty lines
+        // Use regular expressions to remove 
+        // all placeholders starting with
+        // `useSupertest_` and empty lines
         const useSupertestLine = new RegExp(`.*\\\${useSupertest_.*}${os.EOL}(${os.EOL})?`, 'g');
         templateContent = templateContent.replace(useSupertestLine, '');
     }

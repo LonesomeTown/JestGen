@@ -5,7 +5,12 @@ ${useSupertest_gen_server}
 ${useSupertest_gen_request}
 
 afterAll( async ()=> {
+    // TODO: after all should be done
     ${useSupertest_close_server}
 });
 
 describe('${sourceFilePropertise_fileName}', () => {
+    
+    beforeAll( async ()=> {
+        // TODO: before all should be done
+    } );

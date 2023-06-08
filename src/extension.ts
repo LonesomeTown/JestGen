@@ -1,50 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
 import { createTestFile } from './createTestFile';
-import * as utils from './utils';
-
-export interface JestGenConfig {
-    useCustomTemplate: boolean;
-    customTemplatePath: string;
-    useSupertest: boolean;
-    appPath: string | null;
-}
-
-const defaultJestConfig: JestGenConfig = {
-    useCustomTemplate: false,
-    customTemplatePath: __dirname + '/default-template.txt',
-    useSupertest: false,
-    appPath: null,
-};
-
-export const readConfig = async (): Promise<JestGenConfig> => {
-    const rootPath = utils.getRootPath();
-
-    if (!rootPath) {
-        // If neither workspace nor single file is opened, return default config
-        return defaultJestConfig;
-    }
-
-    const configFilePath = path.join(rootPath, '.jestgen.json');
-
-    try {
-        const configFileContent = await fs.promises.readFile(configFilePath, 'utf8');
-        const config: JestGenConfig = JSON.parse(configFileContent);
-        
-        // Update `templatePath` to an absolute path
-        if (config.useCustomTemplate) {
-            config.customTemplatePath = path.resolve(path.dirname(configFilePath), config.customTemplatePath);
-        }
-        
-        return config;
-    } catch {
-        // If the config file can't be read, use the default config
-        return defaultJestConfig;
-    }
-};
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
