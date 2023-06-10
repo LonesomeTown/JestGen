@@ -4,10 +4,11 @@
   "keywords": [
     "jest",
     "generator",
-    "typescript"
+    "typescript",
+    "javascript"
   ],
   "description": "Automatically generate Jest for Typescript project",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.78.0"
   },
@@ -15,21 +16,22 @@
     "Other"
   ],
   "activationEvents": [
-    "onLanguage:typescript"
+    "onLanguage:typescript",
+    "onLanguage:javascript"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "extension.createTestFile",
-        "title": "Create Jest File"
+        "title": "Generate Jest File"
       }
     ],
     "keybindings": [
       {
         "command": "extension.createTestFile",
         "key": "cmd+alt+t",
-        "when": "(editorTextFocus || editorHasSelection) && editorLangId == 'typescript'"
+        "when": "(editorTextFocus || editorHasSelection) && (editorLangId == 'typescript'|| editorLangId == 'javascript')"
       }
     ],
     "menus": {
@@ -37,7 +39,7 @@
         {
           "command": "extension.createTestFile",
           "group": "navigation",
-          "when": "editorHasSelection && editorLangId == 'typescript'"
+          "when": "editorHasSelection && (editorLangId == 'typescript'|| editorLangId == 'javascript')"
         }
       ]
     },
