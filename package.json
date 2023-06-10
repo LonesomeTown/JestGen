@@ -3,7 +3,10 @@
   "displayName": "JestGen",
   "publisher": "TWang",
   "icon": "./public/JestGen.png",
-  "repository": {"type": "git", "url": "https://github.com/LonesomeTown/JestGen"},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LonesomeTown/JestGen"
+  },
   "keywords": [
     "jest",
     "generator",
@@ -11,7 +14,7 @@
     "javascript"
   ],
   "description": "Automatically generate Jest for Typescript project",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "engines": {
     "vscode": "^1.78.0"
