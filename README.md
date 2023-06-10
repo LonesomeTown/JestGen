@@ -85,6 +85,10 @@ Below is an example configuration:
 
 ## Release Notes
 
+### 1.0.1
+
+Upload extension icon
+
 ### 1.0.0
 
 Initial release of JestGen
