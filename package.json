@@ -9,6 +9,7 @@
   ],
   "description": "Automatically generate Jest for Typescript project",
   "version": "1.0.0",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.78.0"
   },
