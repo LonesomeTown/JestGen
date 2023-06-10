@@ -17,7 +17,6 @@ export function activate (context: vscode.ExtensionContext) {
     let disposable = vscode.commands.registerCommand('extension.createTestFile', () => {
         console.log('Command triggered...');
         createTestFile();
-        vscode.window.showInformationMessage('Jest File Created!');
     });
 
 	context.subscriptions.push(disposable);

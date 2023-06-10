@@ -72,6 +72,7 @@ export const createTestFile = async () => {
             templateContent = await fs.promises.readFile(config.customTemplatePath, 'utf8');
             // Write test file
             await fs.promises.writeFile(finalTestFilePath, templateContent);
+            vscode.window.showInformationMessage('Jest File Created!');
       } catch {
         vscode.window.showErrorMessage('Failed to read Jest template file');
       }
@@ -93,9 +94,11 @@ export const createTestFile = async () => {
                 const newTestFileContent = await replaceOldFunctionTestCase(oldTestFileContent,functionName, sourceFilePropertise);
                 // Write test file
                 await fs.promises.writeFile(finalTestFilePath, newTestFileContent);
+                vscode.window.showInformationMessage('Jest File Created!');
             } else {
                 await utils.removeLastLine(finalTestFilePath, oldTestFileContent);
                 await fs.promises.appendFile(finalTestFilePath, testSuitsTemplateContent);
+                vscode.window.showInformationMessage('Jest File Updated!');
             }
             
         } catch {
