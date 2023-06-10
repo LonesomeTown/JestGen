@@ -2,11 +2,15 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import * as parser from '@babel/parser';
+import traverse from '@babel/traverse';
 import * as utils from './utils';
 
 interface SourceFileProperties {
     fileName: string;
     functionName: string;
+    functionDescription: string;
+    functionExpectation: string;
 }
 
 interface JestGenConfig {
@@ -51,7 +55,7 @@ export const createTestFile = async () => {
 
     // Get source file information
     const sourceFilePath = document.fileName;
-    const sourceFileBasename = path.basename(sourceFilePath, path.extname(sourceFilePath));
+    const functionName = document.getText(range)
   
     // Build the path for the test file
     const finalTestFilePath = await buildTestFilePath(sourceFilePath);
@@ -73,19 +77,27 @@ export const createTestFile = async () => {
       }
     } else {
         // Create source file properties
-        const sourceFilePropertise: SourceFileProperties = {
-            fileName: sourceFileBasename,
-            functionName: document.getText(range)
-        }
+        const sourceFilePropertise = await buildSourceFileProperties(sourceFilePath, functionName);
+
         try {
             // If the test file already exists
             // then remove the last line (`}):`) 
             // and just append the test suits content
             await fs.promises.access(finalTestFilePath);
-            await utils.removeLastLine(finalTestFilePath);
-
+            // Read the source file content
+            const oldTestFileContent = await fs.promises.readFile(finalTestFilePath, 'utf-8');
+            
             const testSuitsTemplateContent = await buildTestSuitsTemplate(sourceFilePropertise);
-            fs.promises.appendFile(finalTestFilePath, testSuitsTemplateContent);
+
+            if (await ifFunctionExists(oldTestFileContent, functionName)) {
+                const newTestFileContent = await replaceOldFunctionTestCase(oldTestFileContent,functionName, sourceFilePropertise);
+                // Write test file
+                await fs.promises.writeFile(finalTestFilePath, newTestFileContent);
+            } else {
+                await utils.removeLastLine(finalTestFilePath, oldTestFileContent);
+                await fs.promises.appendFile(finalTestFilePath, testSuitsTemplateContent);
+            }
+            
         } catch {
             // Otherwise create the test file
             templateContent = await buildDefaultTemplate(templateContent, config, sourceFilePropertise);
@@ -123,6 +135,28 @@ const readConfig = async (): Promise<JestGenConfig> => {
     }
 };
 
+const buildSourceFileProperties = async (
+    sourceFilePath: string
+    , functionName: string
+): Promise<SourceFileProperties> => {
+    const functionComments = await parseFunctionComments(sourceFilePath, functionName);
+    const functionComment = functionComments.filter((comment) => comment.indexOf(functionName) > 0)[0];
+    const describeMatch = functionComment?.match(/\*?\s*@JestGen.describe:\s*([\s\S]*?)(?=\n|\*\/|$)/);
+    const describeText = describeMatch ? describeMatch[1].trim() : '';
+
+    const itMatch = functionComment?.match(/\*?\s*@JestGen.it:\s*([\s\S]*?)(?=\n|\*\/|$)/);
+    const itText = itMatch ? itMatch[1].trim() : '';
+
+    const sourceFilePropertis: SourceFileProperties = {
+        fileName: path.basename(sourceFilePath, path.extname(sourceFilePath))
+        , functionName: functionName
+        , functionDescription: describeText || ""
+        , functionExpectation: itText || ""
+    };
+    
+    return sourceFilePropertis;
+}
+
 const buildDefaultTemplate = async (
     templateContent: string
     , config: JestGenConfig
@@ -151,8 +185,7 @@ const replaceDefaultTemplatePlaceholders = async (
 ): Promise<string> => {
     let { useSupertest, appPath } = config;
     let { fileName } = sourceFilePropertise;
-    templateContent = templateContent.replace('${sourceFilePropertise_fileName}', fileName);
-
+    templateContent = utils.replaceAll(templateContent,'${sourceFilePropertise_fileName}',fileName);
 
     if (useSupertest) {
         templateContent = templateContent.replace('${useSupertest_app_import}', `import { app } from '${appPath}';`);
@@ -191,9 +224,11 @@ const replaceTestSuitsTemplatePlaceholders = async (
     testSuitsTemplateContent: string
     , sourceFilePropertise: SourceFileProperties
 ): Promise<string> => {
-    const { functionName } = sourceFilePropertise;
+    const { functionName, functionDescription, functionExpectation } = sourceFilePropertise;
 
     testSuitsTemplateContent = testSuitsTemplateContent.replace('${sourceFilePropertise_functionName}', functionName);
+    testSuitsTemplateContent = testSuitsTemplateContent.replace('${sourceFilePropertise_functionDescription}', functionDescription !== '' ? functionDescription : functionName);
+    testSuitsTemplateContent = testSuitsTemplateContent.replace('${sourceFilePropertise_functionExpectation}', functionExpectation !== '' ? functionExpectation : functionName);
 
     return testSuitsTemplateContent;
 };
@@ -217,3 +252,41 @@ const buildTestFilePath = async (
 
     return finalTestFilePath;
 };
+
+const parseFunctionComments = async (sourceFilePath: string, functionName:string): Promise<string[]> => {
+    const sourceCode = fs.readFileSync(sourceFilePath, 'utf-8');
+    const ast = parser.parse(sourceCode, {
+        sourceType: 'module',
+        plugins: ['typescript']
+    });
+
+    let functionComments: string[] = [];
+
+    traverse(ast, {
+        ExportNamedDeclaration(path) {
+            const leadingComments = path.node.leadingComments;
+
+            if (leadingComments) {
+                leadingComments.forEach((comment) => {
+                    if (comment.type === 'CommentBlock') {
+                        functionComments.push(comment.value.trim());
+                    }
+                });
+            }
+            
+        },
+    });
+
+    return functionComments;
+}
+
+const ifFunctionExists = async (sourceFileContent: string, functionName: string): Promise<boolean> => {
+    const testCaseRegex = new RegExp(`// Test case for ${functionName}\n(.*?)(?=// Test case for|$)`, 'gs');
+    return testCaseRegex.test(sourceFileContent);
+}
+
+const replaceOldFunctionTestCase = async (oldTestFileContent: string, functionName: string, sourceFilePropertise: SourceFileProperties): Promise<string> => {
+    const testCaseRegex = new RegExp(`(// Test case for ${functionName}\\s*describe\\(')(.*?)(', \\(\\) => \\{[\\s\\S]*?it\\(')(.*?)(', \\(\\) => {)`, 'gs');
+    const newTestFileContent = oldTestFileContent.replace(testCaseRegex, `$1${sourceFilePropertise.functionDescription}$3${sourceFilePropertise.functionExpectation}$5`);
+    return newTestFileContent;
+}

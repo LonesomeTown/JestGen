@@ -1,6 +1,7 @@
     
-    describe('when ${sourceFilePropertise_functionName}', () => {
-        it('should ${sourceFilePropertise_functionExpected}', () => {
+    // Test case for ${sourceFilePropertise_functionName}
+    describe('${sourceFilePropertise_functionDescription}', () => {
+        it('${sourceFilePropertise_functionExpectation}', () => {
             // TODO: Add tests
         });
     });
