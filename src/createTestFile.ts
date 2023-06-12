@@ -18,6 +18,9 @@ interface JestGenConfig {
     customTemplatePath: string;
     useSupertest: boolean;
     appPath: string | null;
+    beforeAll: string | null;
+    afterAll: string | null;
+    projectFolder: string | null;
 }
 
 const defaultJestConfig: JestGenConfig = {
@@ -25,6 +28,9 @@ const defaultJestConfig: JestGenConfig = {
     customTemplatePath: __dirname + '/default-template.txt',
     useSupertest: false,
     appPath: null,
+    beforeAll: null,
+    afterAll: null,
+    projectFolder: null,
 };
 
 /**
@@ -56,12 +62,12 @@ export const createTestFile = async () => {
     // Get source file information
     const sourceFilePath = document.fileName;
     const functionName = document.getText(range)
-  
-    // Build the path for the test file
-    const finalTestFilePath = await buildTestFilePath(sourceFilePath);
 
     // Get config
     const config = await readConfig();
+  
+    // Build the path for the test file
+    const finalTestFilePath = await buildTestFilePath(sourceFilePath, config);
 
     // Create test file content
     let templateContent = '';
@@ -240,8 +246,9 @@ const replaceTestSuitsTemplatePlaceholders = async (
 
 const buildTestFilePath = async (
     sourceFilePath: string
+    , config: JestGenConfig
 ): Promise<string> => {
-    const rootPath = utils.getRootPath();
+    const rootPath = config.projectFolder ? config.projectFolder : utils.getRootPath();
     // Remove the rootPath from the source file path
     const relativeSourceFilePath = sourceFilePath.replace(rootPath, '');
     // Create the test file path

@@ -18,6 +18,18 @@
     "appPath": {
       "description": "The relative path to the app file, if useSupertest is true. This is required if useSupertest is true.",
       "type": "string"
+    },
+    "beforeAll": {
+      "description": "The snippet to execute before all tests.",
+      "type": "string"
+    },
+    "afterAll": {
+        "description": "The snippet to execute after all tests.",
+        "type": "string"
+    },
+    "projectFolder": {
+        "description": "The absolute path to the root of the project. Used when there are multiple projects under one workspace.",
+        "type": "string"
     }
   },
   "required": ["useTemplate", "useSupertest"]

@@ -84,6 +84,8 @@ Below is an example configuration:
 > Due to the different project structures, it is recommended to use absolute paths for all configuration paths.
 
 ## Release Notes
+
+More change details can be found in [CHANGELOG] (https://github.com/LonesomeTown/JestGen/blob/main/CHANGELOG.md)
 ### 1.0.2
 
 Change the test file path
