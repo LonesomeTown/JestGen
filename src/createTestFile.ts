@@ -106,6 +106,7 @@ export const createTestFile = async () => {
             templateContent = await buildDefaultTemplate(templateContent, config, sourceFilePropertise);
             const testSuitsTemplateContent = await buildTestSuitsTemplate(sourceFilePropertise);
             fs.promises.writeFile(finalTestFilePath, templateContent + testSuitsTemplateContent);
+            vscode.window.showInformationMessage('Jest File Created!');
         }
     }
 
@@ -244,7 +245,7 @@ const buildTestFilePath = async (
     // Remove the rootPath from the source file path
     const relativeSourceFilePath = sourceFilePath.replace(rootPath, '');
     // Create the test file path
-    const testFilePath = path.join(rootPath, 'test', relativeSourceFilePath);
+    const testFilePath = path.join(rootPath, 'tests', relativeSourceFilePath);
     // Change the test file extension to `.test.ts`
     const testFileBaseName = path.basename(testFilePath, path.extname(testFilePath));
     const testFileDirName = path.dirname(testFilePath);
