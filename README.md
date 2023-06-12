@@ -84,6 +84,9 @@ Below is an example configuration:
 > Due to the different project structures, it is recommended to use absolute paths for all configuration paths.
 
 ## Release Notes
+### 1.0.2
+
+Change the test file path
 
 ### 1.0.1
 
