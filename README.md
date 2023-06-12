@@ -85,7 +85,7 @@ Below is an example configuration:
 
 ## Release Notes
 
-More change details can be found in [CHANGELOG] (https://github.com/LonesomeTown/JestGen/blob/main/CHANGELOG.md)
+More change details can be found in [CHANGELOG](https://github.com/LonesomeTown/JestGen/blob/main/CHANGELOG.md)
 ### 1.0.2
 
 Change the test file path
