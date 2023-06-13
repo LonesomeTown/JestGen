@@ -6,8 +6,8 @@ Start using JestGen today and experience a more efficient, enjoyable testing wor
 
 ## Quick Menu
 1. [Features](#features)
-2. [Requirements](#requirements)
-3. [Usages](#usages)
+2. [Usages](#usages)
+3. [Requirements](#requirements)
 4. [Extension Settings](#extension-settings)
 5. [Release Notes](#release-notes)
 6. [Issues](#issues)
