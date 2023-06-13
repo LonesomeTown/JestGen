@@ -2,12 +2,6 @@
 
 JestGen is a powerful and versatile extension for developers that automates the process of creating unit test files for Jest testing framework. It dynamically generates test templates based on your JavaScript or TypeScript source files, enabling you to focus more on writing test cases, rather than setting up the test files.
 
-JestGen leverages the AST parsing technique to fetch the necessary information about the source file, including the file name, function names, and user-defined descriptions and expectations from the comments. It is built to be highly configurable, allowing users to define the naming conventions and directory structure for test files.
-
-With JestGen, creating and managing Jest test files becomes effortless, giving you more time to focus on the logic of your tests and less on boilerplate code.
-
-This extension is ideal for both beginners who are just getting started with Jest and seasoned developers looking for a productivity boost in their testing process.
-
 Start using JestGen today and experience a more efficient, enjoyable testing workflow!
 
 ## Quick Menu
