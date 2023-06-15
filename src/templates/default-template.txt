@@ -7,6 +7,7 @@ ${useSupertest_gen_request}
 afterAll( async ()=> {
     // TODO: after all should be done
     ${useSupertest_close_server}
+    ${afterAll}
 });
 
 // Test suit for ${sourceFilePropertise_fileName}
@@ -14,4 +15,5 @@ describe('${sourceFilePropertise_fileName}', () => {
 
     beforeAll( async ()=> {
         // TODO: before all should be done
+        ${beforeAll}
     } );

@@ -44,7 +44,7 @@ export const loginUser = async () => {
   // method body...
 }
 ```
-
+> The **function name** is required in comments!
 
 ## Requirements
 
@@ -58,12 +58,14 @@ npm install --save-dev jest ts-jest @types/jest
 
 JestGen is designed to be versatile and adaptable to your specific needs. You can use it out of the box with its default settings to generate Jest test templates, or customize its behavior through a **`.jestgen.json`** configuration file in the root directory of your workspace.
 
-Here's a list of the currently supported configuration options:
+Here's a part of the currently supported configuration options:
 
 * **`useCustomTemplate`**: A boolean value that determines whether to use a custom template for generating the test files. Defaults to false.
 * **`customTemplatePath`**: A string value representing the path to the custom template file. This option is used only if useCustomTemplate is set to true.
 * **`useSupertest`**: A boolean value indicating whether to use [Supertest](https://www.npmjs.com/package/supertest) in the test files. Supertest is a high-level abstraction for testing HTTP, useful for testing your Express.js server.
 * **`appPath`**: A string value representing the relative path to the app file. This is required if useSupertest is set to true.
+
+More configuration options can be found in [Configuration](https://lonesometown.github.io/JestGen/json-schema.json)
 
 Below is an example configuration:
 ```json

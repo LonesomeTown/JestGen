@@ -91,25 +91,24 @@ export const createTestFile = async () => {
             // then remove the last line (`}):`) 
             // and just append the test suits content
             await fs.promises.access(finalTestFilePath);
-            // Read the source file content
-            const oldTestFileContent = await fs.promises.readFile(finalTestFilePath, 'utf-8');
-            
+            const testFileContent = await fs.promises.readFile(finalTestFilePath, 'utf8');
             const testSuitsTemplateContent = await buildTestSuitsTemplate(sourceFilePropertise);
 
-            if (await ifFunctionExists(oldTestFileContent, functionName)) {
-                const newTestFileContent = await replaceOldFunctionTestCase(oldTestFileContent,functionName, sourceFilePropertise);
+            // Determine if the test case already exists
+            if (await ifFunctionExists(testFileContent, functionName)) {
+                const newTestFileContent = await replaceOldFunctionTestCase(testFileContent,functionName, sourceFilePropertise);
                 // Write test file
                 await fs.promises.writeFile(finalTestFilePath, newTestFileContent);
-                vscode.window.showInformationMessage('Jest File Created!');
+                vscode.window.showInformationMessage('Jest File Updated!');
             } else {
-                await utils.removeLastLine(finalTestFilePath, oldTestFileContent);
+                await utils.removeLastLine(finalTestFilePath, testFileContent);
                 await fs.promises.appendFile(finalTestFilePath, testSuitsTemplateContent);
                 vscode.window.showInformationMessage('Jest File Updated!');
             }
             
         } catch {
             // Otherwise create the test file
-            templateContent = await buildDefaultTemplate(templateContent, config, sourceFilePropertise);
+            templateContent = await buildDefaultTemplateContent(templateContent, config, sourceFilePropertise);
             const testSuitsTemplateContent = await buildTestSuitsTemplate(sourceFilePropertise);
             fs.promises.writeFile(finalTestFilePath, templateContent + testSuitsTemplateContent);
             vscode.window.showInformationMessage('Jest File Created!');
@@ -120,7 +119,7 @@ export const createTestFile = async () => {
 };
 
 const readConfig = async (): Promise<JestGenConfig> => {
-    const rootPath = utils.getRootPath();
+    const rootPath = await utils.getRootPath();
 
     if (!rootPath) {
         // If neither workspace nor single file is opened, return default config
@@ -167,7 +166,7 @@ const buildSourceFileProperties = async (
     return sourceFilePropertis;
 }
 
-const buildDefaultTemplate = async (
+const buildDefaultTemplateContent = async (
     templateContent: string
     , config: JestGenConfig
     , sourceFilePropertise: SourceFileProperties
@@ -188,12 +187,29 @@ const buildDefaultTemplate = async (
     return '';
 };
 
+const updateDefaultTemplateContent = async (
+    oldTestFilePath: string
+    , config: JestGenConfig
+    , sourceFilePropertise: SourceFileProperties
+): Promise<string> => {
+
+    try {
+        let templateContent = await fs.promises.readFile(oldTestFilePath, 'utf8');
+        templateContent = await replaceDefaultTemplatePlaceholders(templateContent, config, sourceFilePropertise);
+        return templateContent;
+    } catch {
+        vscode.window.showErrorMessage('Failed to read old template file');
+    }  
+
+    return '';
+};
+
 const replaceDefaultTemplatePlaceholders = async (
     templateContent: string
     , config: JestGenConfig
     , sourceFilePropertise: SourceFileProperties
 ): Promise<string> => {
-    let { useSupertest, appPath } = config;
+    let { useSupertest, appPath, beforeAll, afterAll } = config;
     let { fileName } = sourceFilePropertise;
     templateContent = utils.replaceAll(templateContent,'${sourceFilePropertise_fileName}',fileName);
 
@@ -209,6 +225,18 @@ const replaceDefaultTemplatePlaceholders = async (
         // `useSupertest_` and empty lines
         const useSupertestLine = new RegExp(`.*\\\${useSupertest_.*}${os.EOL}(${os.EOL})?`, 'g');
         templateContent = templateContent.replace(useSupertestLine, '');
+    }
+
+    if (beforeAll) {
+        templateContent = templateContent.replace('${beforeAll}', beforeAll);
+    } else {
+        templateContent = templateContent.replace('${beforeAll}', '');
+    }
+
+    if (afterAll) {
+        templateContent = templateContent.replace('${afterAll}', afterAll);
+    } else {
+        templateContent = templateContent.replace('${afterAll}', '');
     }
 
     return templateContent;
@@ -248,11 +276,14 @@ const buildTestFilePath = async (
     sourceFilePath: string
     , config: JestGenConfig
 ): Promise<string> => {
-    const rootPath = config.projectFolder ? config.projectFolder : utils.getRootPath();
+    const rootPath = config.projectFolder ? config.projectFolder : await utils.getRootPath();
+    
     // Remove the rootPath from the source file path
     const relativeSourceFilePath = sourceFilePath.replace(rootPath, '');
+
     // Create the test file path
     const testFilePath = path.join(rootPath, 'tests', relativeSourceFilePath);
+
     // Change the test file extension to `.test.ts`
     const testFileBaseName = path.basename(testFilePath, path.extname(testFilePath));
     const testFileDirName = path.dirname(testFilePath);
