@@ -6,6 +6,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [1.0.3] - 2023-06-15
+
 ### Added: 
 - More configuration options.
 - CHANGELOG.md
