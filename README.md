@@ -72,8 +72,11 @@ Below is an example configuration:
 {
   "useCustomTemplate": true,
   "customTemplatePath": "/path/to/your/template.txt",
-  "useSupertest": true,
-  "appPath": "/path/to/your/app"
+  "customPlaceholders": [
+        ["${customStr}", "This is for test"],
+        ["${importRelativePath}", "${relativePathLevel}"]
+  ],
+  "relativePathLevel": "../../.."
 }
 ```
 
@@ -82,6 +85,9 @@ Below is an example configuration:
 ## Release Notes
 
 More change details can be found in [CHANGELOG](https://github.com/LonesomeTown/JestGen/blob/main/CHANGELOG.md)
+### 1.0.4
+
+Add custom placeholders in custom templates
 ### 1.0.3
 
 Fix some issues

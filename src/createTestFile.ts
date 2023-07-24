@@ -16,6 +16,8 @@ interface SourceFileProperties {
 interface JestGenConfig {
     useCustomTemplate: boolean;
     customTemplatePath: string;
+    customPlaceholders?: Map<string, string>;
+    relativePathLevel: string | null;
     useSupertest: boolean;
     appPath: string | null;
     beforeAll: string | null;
@@ -26,6 +28,8 @@ interface JestGenConfig {
 const defaultJestConfig: JestGenConfig = {
     useCustomTemplate: false,
     customTemplatePath: __dirname + '/default-template.txt',
+    customPlaceholders: new Map<string, string>(),
+    relativePathLevel: null,
     useSupertest: false,
     appPath: null,
     beforeAll: null,
@@ -42,13 +46,13 @@ export const createTestFile = async () => {
     // Make sure we have a.ts file selected
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-        vscode.window.showInformationMessage('Please open a .ts file to create a Jest test file.');
+        vscode.window.showInformationMessage('Please open a .js/.ts file to create a Jest test file.');
         return;
     }
 
     const document = editor.document;
-    if (document.languageId !== 'typescript') {
-        vscode.window.showInformationMessage('Please select a method in a .ts file to create a Jest test file.');
+    if (document.languageId !== 'typescript' && document.languageId !== 'javascript') {
+        vscode.window.showInformationMessage('Please select a method in a .js/.ts file to create a Jest test file.');
         return;
     }
 
@@ -76,6 +80,7 @@ export const createTestFile = async () => {
     if (config.useCustomTemplate) {
       try {
             templateContent = await fs.promises.readFile(config.customTemplatePath, 'utf8');
+            templateContent = await buildCustomTemplateContent(templateContent, config);
             // Write test file
             await fs.promises.writeFile(finalTestFilePath, templateContent);
             vscode.window.showInformationMessage('Jest File Created!');
@@ -132,9 +137,11 @@ const readConfig = async (): Promise<JestGenConfig> => {
         const configFileContent = await fs.promises.readFile(configFilePath, 'utf8');
         const config: JestGenConfig = JSON.parse(configFileContent);
         
-        // Update `templatePath` to an absolute path
         if (config.useCustomTemplate) {
+            // Update `templatePath` to an absolute path
             config.customTemplatePath = path.resolve(path.dirname(configFilePath), config.customTemplatePath);
+            // Covert `customPlaceholders` to a Map
+            config.customPlaceholders = new Map(config.customPlaceholders);
         }
         
         return config;
@@ -164,6 +171,39 @@ const buildSourceFileProperties = async (
     };
     
     return sourceFilePropertis;
+}
+
+const buildCustomTemplateContent = async (
+    templateContent: string
+    , config: JestGenConfig
+): Promise<string> => {
+
+    if (!config.customPlaceholders || config.customPlaceholders.size === 0) {
+        return templateContent;
+    }
+
+    const substitutePlaceholder = async (value: string, config: JestGenConfig): Promise<string> =>{
+        const matches = value.match(/\$\{(.*?)\}/g);
+        if (matches) {
+            for (const match of matches) {
+                const placeholder = match.substring(2, match.length - 1);
+                if ((config as any)[placeholder]) {
+                    value = value.replace(match, (config as any)[placeholder]);
+                }
+            }
+        }
+        return value;
+    }
+
+    for (const [placeholder, value] of config.customPlaceholders.entries()) {
+            const substituteValue = await substitutePlaceholder(value, config);
+            // Replace the placeholder in the template
+            const regex = new RegExp(placeholder.replace(/\$/g, '\\$').replace(/{/g, '\\{').replace(/}/g, '\\}'), 'g');
+            templateContent = templateContent.replace(regex, substituteValue);
+    }
+    
+    return templateContent;
+
 }
 
 const buildDefaultTemplateContent = async (
@@ -291,6 +331,15 @@ const buildTestFilePath = async (
 
     // Make sure the test directory exists
     await fs.promises.mkdir(testFileDirName, { recursive: true });
+
+    // Calculate the relative path level
+    const relativePathLevel = path.relative(testFileDirName, rootPath)
+        .split(path.sep)
+        .filter(part => part !== '.')
+        .map(() => '..')
+        .join('/');
+    
+    config.relativePathLevel = relativePathLevel;
 
     return finalTestFilePath;
 };

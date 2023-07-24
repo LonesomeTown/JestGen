@@ -11,6 +11,14 @@
       "description": "The path to the customize template file, if useCustomizeTemplate is true.",
       "type": "string"
     },
+    "customPlaceholders": {
+      "description": "This array is used to define custom placeholders which will be replaced in the template file. Each key is a placeholder and the value is the string to replace the placeholder with.",
+      "type": "array"
+    },
+    "relativePathLevel": {
+        "description": "This string indicates the level of directory depth for relative path (e.g '../..'). Use this when the file location is nested and you need to reference a file in a higher directory.",
+        "type": "string"
+    },
     "useSupertest": {
       "description": "Whether to use Supertest in the test files.",
       "type": "boolean"
